@@ -8,8 +8,12 @@ jobs:
   test-and-deploy:
     runs-on: ubuntu-latest
     
+    # 1. Add this line to tell GitHub to run everything inside your subfolder:
+    defaults:
+      run:
+        working-directory: ./cloud-computing
+
     steps:
-   
     - name: Checkout Code
       uses: actions/checkout@v3
       
@@ -27,9 +31,7 @@ jobs:
       run: |
         pytest test_main.py
 
-   
     - name: Trigger Render Deployment
-     
       env:
         deploy_url: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
       run: |
