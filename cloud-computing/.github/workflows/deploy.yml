@@ -1,4 +1,4 @@
-﻿name: CI/CD Pipeline for Payment Microservice
+name: CI/CD Pipeline for Payment Microservice
 
 on:
   push:
@@ -17,14 +17,34 @@ jobs:
       with:
         python-version: '3.9'
 
-    - name: Install dependencies
+    - name: Install dependencies & Run Tests (Auto-Detect)
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        # 1. Find requirements.txt anywhere in the repository
+        REQ_PATH=$(find . -name "requirements.txt" -print -quit)
+        if [ -z "$REQ_PATH" ]; then
+          echo "ERROR: Could not find requirements.txt anywhere in the repo!"
+          ls -R
+          exit 1
+        fi
         
-    - name: Run Tests
-      run: |
-        pytest test_main.py
+        # 2. Get directory containing requirements.txt and change into it
+        WORK_DIR=$(dirname "$REQ_PATH")
+        echo "Found requirements.txt at $REQ_PATH. Switching working directory to $WORK_DIR"
+        cd "$WORK_DIR"
+        
+        # 3. Install dependencies (ensuring pytest is installed as a safety fallback)
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt pytest
+        
+        # 4. Find test_main.py and run pytest
+        TEST_PATH=$(find . -name "test_main.py" -print -quit)
+        if [ -n "$TEST_PATH" ]; then
+          echo "Found test file at $TEST_PATH"
+          pytest test_main.py
+        else
+          echo "ERROR: Could not find test_main.py!"
+          exit 1
+        fi
 
     - name: Trigger Render Deployment
       env:
