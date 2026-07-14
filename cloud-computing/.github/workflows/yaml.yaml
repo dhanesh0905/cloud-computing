@@ -7,11 +7,6 @@ on:
 jobs:
   test-and-deploy:
     runs-on: ubuntu-latest
-    
-   
-    defaults:
-      run:
-        working-directory: ./cloud-computing
 
     steps:
     - name: Checkout Code
@@ -21,15 +16,36 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
-        
-    - name: Install dependencies
+
+    - name: Install dependencies (Auto-Detect)
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        # Automatically search for requirements.txt in the workspace
+        REQ_PATH=$(find . -name "requirements.txt" -print -quit)
+        if [ -n "$REQ_PATH" ]; then
+          echo "Found requirements.txt at: $REQ_PATH"
+          pip install -r "$REQ_PATH"
+        else
+          echo "ERROR: requirements.txt not found!"
+          ls -R
+          exit 1
+        fi
         
-    - name: Run Tests
+    - name: Run Tests (Auto-Detect)
       run: |
-        pytest test_main.py
+        # Automatically search for test_main.py in the workspace
+        TEST_PATH=$(find . -name "test_main.py" -print -quit)
+        if [ -n "$TEST_PATH" ]; then
+          echo "Found test_main.py at: $TEST_PATH"
+          # Go to the directory containing the tests so main.py imports work
+          TARGET_DIR=$(dirname "$TEST_PATH")
+          cd "$TARGET_DIR"
+          pytest $(basename "$TEST_PATH")
+        else
+          echo "ERROR: test_main.py not found!"
+          ls -R
+          exit 1
+        fi
 
     - name: Trigger Render Deployment
       env:
