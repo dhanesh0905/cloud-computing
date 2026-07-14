@@ -8,7 +8,7 @@ jobs:
   test-and-deploy:
     runs-on: ubuntu-latest
     
-    # 1. Add this line to tell GitHub to run everything inside your subfolder:
+   
     defaults:
       run:
         working-directory: ./cloud-computing
